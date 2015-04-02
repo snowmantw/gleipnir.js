@@ -14,7 +14,7 @@ messy. For example, the simple eDSL with similar interface of Promise:
       .next(/* do something asynchronously */)
       .next(/* do something asynchronously */)
       ....
-    ````
+    ```
 
 The implementation of 'next' could be very simple because it only needs to:
 
