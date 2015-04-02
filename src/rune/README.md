@@ -8,11 +8,13 @@ conditional statements, loop, sub-process, etc. And when the language grows
 while people want to add more features on it the inner states would become
 messy. For example, the simple eDSL with similar interface of Promise:
 
+    ```javascript
     (new Wish())
       .next(/* do something asynchronously */)
       .next(/* do something asynchronously */)
       .next(/* do something asynchronously */)
       ....
+    ````
 
 The implementation of 'next' could be very simple because it only needs to:
 
