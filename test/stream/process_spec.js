@@ -8,6 +8,17 @@ describe(`Process > `, () => {
     expect(Process).to.exist;
   });
 
+  it(`should report error when the order of nodes is wrong`, (done) => {
+    var process = new Process();
+    try {
+      process.stop().start().next(() => {
+        done('Error: should not execute this step (stop before start)');
+      });
+    } catch(e) {
+      done();
+    }
+  });
+
   it(`should build the process with different steps`, (done) => {
     var process = new Process();
     process.start()

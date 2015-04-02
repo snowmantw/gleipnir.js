@@ -1,4 +1,5 @@
 'use strict';
+
 /**
  * Generic builder that would push nodes into the eDSL stack.
  * User could inherit this to define the new eDSL.
@@ -19,17 +20,17 @@
  * [node] and [stack].
  * ---
  * Although the eDSL instance should wrap these basic operations
- * to manipulate the stack, but they all need to convert the method
- * call to nodes, so Language provide a way to simplify the work: if
+ * to manipulate the stack, they all need to convert the method
+ * call to nodes. So 'Language' provide a way to simplify the work: if
  * the instance call the [define] method the name of the method,
  * it could associate the operand of the eDSL with the stack manipulation.
  * For example:
  *
- *    var builder = new Language();
- *    builder.define('transaction', 'begin');
- *    builder.define('pre', 'push');
- *    builder.define('perform', 'push');
- *    builder.define('post', 'end');
+ *    var eDSL = function() {};
+ *    eDSL.prototype.transaction = Language.define('transaction', 'begin');
+ *    eDSL.prototype.pre = Language.define('pre', 'push');
+ *    eDSL.prototype.perform = Language.define('perform', 'push');
+ *    eDSL.prototype.post = Language.define('post', 'end');
  *
  * Then the eDSL could be used as:
  *
@@ -58,7 +59,7 @@
  *      .perform(cb)
  *      .transaction()
  *
- * The builder would report errot because when '.post(cb)' there is no stack
+ * The runtime may report errot because when '.post(cb)' there is no stack
  * created by the beginning step, namely the '.pre(cb)' in our case.
  * Nevertheless, the error message is too low-level for the language user,
  * since they should care no stack things and should only care about the eDSL
@@ -67,13 +68,13 @@
  * The solution is to provide a basic stack ordering analyzer and let the
  * language decide how to describe the error. And since we don't have
  * any context information about variables, scope and other elements
- * as a fully functional langauge, we only need to guarantee the order is
+ * as a complete programming language, we only need to guarantee the order is
  * correct, and make incorrect cases meaningful. Moreover, since the analyzer
  * needs to analyze the states whenever the incoming node comes, it is in fact
- * an evaluation process, so user could combine the analyzing and intepreting
+ * an evaluation process, so user could combine the analyzing and interpreting
  * phase into the same function. For example:
  *
- *    builder.onchange((context, node, stack) => {
+ *    runtime.onchange((context, node, stack) => {
  *        // If the change is to switch to a new stack,
  *        // the 'stack' here would be the new stack.
  *        var {type, args} = node;
@@ -84,15 +85,15 @@
  *        }
  *    });
  *
- * If the incoming node or the stack is malformed, it should throw the error.
- * This error would be captured by the builder and we could have a 'compilation
- * error'.
+ * With such feature, if the incoming node or the stack is malformed,
+ * it should throw the error. The error captured by the instance like this
+ * could be a 'compilation error'.
  *
- * The callback of the 'onchange' is actually a reducer, so user could treat
- * the process of this evalution & analyzing as a reducing process on an
- * infinite stream. And since we have a stack machine, if the reducer return
- * nothing, the stack would be empty. Otherwise, if the reducer return a node,
- * the stack would contain it.
+ * The noticeable fact is The callback of the 'onchange' is actually a reducer,
+ * so user could treat the process of this evaluation & analyzing as a reducing
+ * process on an infinite stream. And since we have a stack machine, if the
+ * reducer return nothing, the stack would be empty. Otherwise, if the reducer
+ * return a new stack, it would replace the old one.
  *
  * And please note the example is much simplified. For the
  * real eDSL it should be used only as an entry to dispatch the change to
@@ -102,51 +103,54 @@ export function Language() {}
 
 /**
  * Helper method to build interface of a specific DSL. It would return a method
- * of the DSL and then the interfance could attach it.
+ * of the DSL and then the interface could attach it.
  *
  * The returning function would assume that the 'this' inside it is the runtime
- * of the language, and would have members as '_stack', '_handler', etc.
+ * of the language. And since the method it returns would require to access some
+ * members of the 'this', the 'this' should have 'this.stack' and 'this.context'
+ * as the method requires.
  *
- * If it's 'exit' node, means the session is ended and the intepreter should
+ * If it's 'exit' node, means the session is ended and the interpreter should
  * return a stack contains only one node as the result of the session, or the
  * session returns nothing.
+ *
  */
 Language.define = function(method, as) {
   return function(...args) {
     var node, resultstack;
     switch (as) {
       case 'push':
-        node = new Language.Node(method, args, this._stack);
-        this._stack.push(node);
+        node = new Language.Node(method, args, this.stack);
+        this.stack.push(node);
         resultstack =
-          this._handler(this.context, node, this._stack);
+          this.onchange(this.context, node, this.stack);
         break;
       case 'begin':
-        this._prevstack = this._stack;
-        this._stack = [];
-        node = new Language.Node(method, args, this._stack);
-        this._stack.push(node);  // as the first node of the new stack.
+        this._prevstack = this.stack;
+        this.stack = [];
+        node = new Language.Node(method, args, this.stack);
+        this.stack.push(node);  // as the first node of the new stack.
         resultstack =
-          this._handler(this.context, node, this._stack);
+          this.onchange(this.context, node, this.stack);
         break;
       case 'end':
-        node = new Language.Node(method, args, this._stack);
-        this._stack.push(node);  // the last node of the stack.
-        this._stack =
+        node = new Language.Node(method, args, this.stack);
+        this.stack.push(node);  // the last node of the stack.
+        this.stack =
           this._prevstack; // switch back to the previous stack.
         resultstack =
-          this._handler(this.context, node, this._stack);
+          this.onchange(this.context, node, this.stack);
         break;
       case 'exit':
-        node = new Language.Node(method, args, this._stack);
-        this._stack.push(node);  // the last node of the stack.
+        node = new Language.Node(method, args, this.stack);
+        this.stack.push(node);  // the last node of the stack.
         resultstack =
-          this._handler(this.context, node, this._stack);
+          this.onchange(this.context, node, this.stack);
         return resultstack[0];
     }
     // If the handler updates the stack, it would replace the existing one.
     if (resultstack) {
-      this._stack = resultstack;
+      this.stack = resultstack;
     }
     return this;
   };
@@ -155,13 +159,13 @@ Language.define = function(method, as) {
 Language.Node = function(type, args, stack) {
   this.type = type;
   this.args = args;
-  this._stack = stack;
+  this.stack = stack;
 };
 
-Language.Evaluate = function() {
+Language.Evaluate = function(context = {}) {
   this._analyzers = [];
   this._interpreter = null;
-  this._context = {};
+  this._context = context;
 };
 
 /**
@@ -176,47 +180,45 @@ Language.Evaluate = function() {
  *
  *    function(context, change, stack) {
  *      // Do some check and maybe changed the context.
- *      // The next analyzer to the intepreter would accept the alternated
+ *      // The next analyzer to the interpreter would accept the alternated
  *      // context as the argument 'context'.
  *      context.someFlag = true;
  *      // When there is wrong, throw it.
  *      throw new Error('Some analyzing error');
- *      // Return the context as the result.
- *      return context;
  *    };
  *
  * Note that the analyzer ('a') would be invoked with empty 'this' object,
- * so the function relys on 'this' should bind itself first.
+ * so the function relies on 'this' should bind itself first.
  */
 Language.Evaluate.prototype.analyzer = function(a) {
   this._analyzers.push(a);
+  return this;
 };
 
 /**
- * One Evaluate can only have one intepreter, and it would return
+ * One Evaluate can only have one interpreter, and it would return
  * the function could consume every stack change from 'Language#evaluate'.
  *
  * The code is a little complicated: we have two kinds of 'reducing':
- * one is to reduce all analyzers with the sinlge incoming change,
- * another is to reduce all incoming changes with this analyzers + intepreter.
+ * one is to reduce all analyzers with the single incoming change,
+ * another is to reduce all incoming changes with this analyzers + interpreter.
  *
- * The analyzer and intepreter should change the context, to memorize the
- * states of the evaluation. The difference is intepreter should return one
+ * The analyzer and interpreter should change the context, to memorize the
+ * states of the evaluation. The difference is interpreter should return one
  * new stack if it needs to update the existing one. The stack it returns would
  * replace the existing one, so anything still in the old one would be wiped
- * out. The intepreter could return nothing ('undefined') to keep the stack
+ * out. The interpreter could return nothing ('undefined') to keep the stack
  * untouched.
  *
- * The analyzers and intepreter could change the 'context' pass to them.
+ * The analyzers and interpreter could change the 'context' pass to them.
  * And since we may update the stack as above, the context should memorize
  * those information not to be overwritten while the stack get wiped out.
  *
- * And if the intepreting node is the exit node of the session, intepreter
+ * And if the interpreting node is the exit node of the session, interpreter
  * should return a new stack contains only one final result node. If there
  * is no such node, the result of this session is 'undefined'.
  */
-Language.Evaluate.prototype.intepreter = function(i) {
-  this._interpreter = i;
+Language.Evaluate.prototype.intepreter = function(inpt) {
   // The Language would give the default context.
   return (context, change, stack) => {
     try {
@@ -227,8 +229,8 @@ Language.Evaluate.prototype.intepreter = function(i) {
     } catch(e) {
       this._handleError(e, context, change, stack);
     }
-    // After analyze it, intepret the node and return the new stack (if any).
-    var newStack = this._intepreter(context, change, stack);
+    // After analyze it, interpret the node and return the new stack (if any).
+    var newStack = inpt(context, change, stack);
     return newStack;
   };
 };
@@ -236,5 +238,5 @@ Language.Evaluate.prototype.intepreter = function(i) {
 Language.Evaluate.prototype._handleError =
 function(err, context, change, stack) {
   // TODO: expand it to provide more sophistic debugging message.
-  throw new Error(`When change ${change.type} comes the error ${err} happened`);
+  throw new Error(`When change ${change.type} comes error '${err}' happened`);
 };
