@@ -8,13 +8,13 @@ conditional statements, loop, sub-process, etc. And when the language grows
 while people want to add more features on it the inner states would become
 messy. For example, the simple eDSL with similar interface of Promise:
 
-    ```javascript
-    (new Wish())
-      .next(/* do something asynchronously */)
-      .next(/* do something asynchronously */)
-      .next(/* do something asynchronously */)
-      ....
-    ```
+```javascript
+(new Wish())
+  .next(/* do something asynchronously */)
+  .next(/* do something asynchronously */)
+  .next(/* do something asynchronously */)
+  ....
+```
 
 The implementation of 'next' could be very simple because it only needs to:
 
@@ -27,28 +27,32 @@ The implementation of 'next' could be very simple because it only needs to:
 
 For the 'Wish' eDSL, the states it needs are defined in the constructor:
 
-    var Wish = function() {
-      currentStep = null;
-      currentStepResolved = false;
-      steps = [];
-    };
+```javascript
+var Wish = function() {
+  currentStep = null;
+  currentStepResolved = false;
+  steps = [];
+};
+```
 
 The problem comes when we want to add more features like a formal language
 on it. For example, could we have some 'asynchronous if...else' with the syntax
 similar to other languages? The most intuitive interface would be:
 
-    (new Wish())
-      .next( /* asynchronously generate conditions */ )
-      .if( (condition) => { return condition === somefoo })
-        .next( /* do some asynchronous thing for this branch */ )
-        .next( /* do some asynchronous thing for this branch */ )
-        .if( (nestedcond) => { return nestedcondition === somebar })
-          .next( /* it could be more complicated with nested one like this*/ )
-        .end()
-      .else()
-        .next( /* do some asynchronous thing for this branch */ )
-      .end()
-      .next(/* after the section, do something */)
+```javascript
+(new Wish())
+  .next( /* asynchronously generate conditions */ )
+  .if( (condition) => { return condition === somefoo })
+    .next( /* do some asynchronous thing for this branch */ )
+    .next( /* do some asynchronous thing for this branch */ )
+    .if( (nestedcond) => { return nestedcondition === somebar })
+      .next( /* it could be more complicated with nested one like this*/ )
+    .end()
+  .else()
+    .next( /* do some asynchronous thing for this branch */ )
+  .end()
+  .next(/* after the section, do something */)
+```
 
 However, this interface would bring disaster to our simple eDSL. First, the
 nodes concated are all in a queue, so we don't have a proper way to construct
@@ -76,16 +80,16 @@ more modularized & flexible.
 
 ## Usage
 
-'Language.define' would return a method that could map to the corresponding
+**Language.define** would return a method that could map to the corresponding
 stack operations.
 
-'Language.Evaluate' would return a evaluator, which is actually a reducer
+**Language.Evaluate** would return a evaluator, which is actually a reducer
 that could apply on every new node of the stack, and then analyze and
 interpret it to run the program. It's an optional feature so you could
 still compose the eDSL without that, but with it there is at least a basic
 method of how to create an eDSL by Rune.
 
-These tools are all of module 'Language'. See 'language.js' for more
+These tools are all of module **Language**. See 'language.js' for more
 details from the comments.
 
 An existing eDSL by Rune is Process of Gleipnir. It's an eDSL to provide
