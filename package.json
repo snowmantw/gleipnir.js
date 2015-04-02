@@ -1,6 +1,6 @@
 {
-  "name": "gleipnir",
-  "description": "Gleipnir for UI programming",
+  "name": "gleipnir.js",
+  "description": "Gleipnir.js - a library for UI programming",
   "version": "0.0.1",
   "devDependencies": {
     "karma": "^0.12.31",
