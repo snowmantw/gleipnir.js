@@ -1,0 +1,10 @@
+{
+  "name": "gleipnir",
+  "description": "Gleipnir for UI programming",
+  "version": "0.0.1",
+  "devDependencies": {
+    "karma": "^0.12.31",
+    "karma-chai": "^0.1.0",
+    "karma-traceur-preprocessor": "^0.4.0"
+  }
+}
