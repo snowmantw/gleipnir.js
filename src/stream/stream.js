@@ -1,6 +1,6 @@
-/* global Process */
-
 'use strict';
+
+import { Process } from 'src/stream/process/process.js';
 
 /**
  * Combine the abilities of the event handling and asynchronous operations
@@ -13,8 +13,12 @@
  * 3. Only receive events when it's 'ready'. Before that, no source events
  *    would be forwarded and handled.
  * 4. Once phase becomes 'stop', no events would be received again.
+ *
+ * Stream should create with a configs object if user want to set up sources,
+ * events and interrupts. If there is no such object, it would act like a
+ * Process, and without any function handles events.
  **/
-function Stream(configs = {}) {
+export function Stream(configs = {}) {
   this.configs = {
     events: configs.events || [],
     interrupts: configs.interrupts || []
@@ -30,7 +34,7 @@ function Stream(configs = {}) {
 }
 
 Stream.prototype.phase = function() {
-  return this.process.states.phase;
+  return this.process._runtime.states.phase;
 };
 
 Stream.prototype.start = function(forwardTo) {
@@ -99,7 +103,7 @@ Stream.prototype.wait = function(tasks) {
  * it, depends on whether the event is an interrupt.
  */
 Stream.prototype.onchange = function(evt) {
-  if ('start' !== this.process.states.phase) {
+  if ('start' !== this.process._runtime.states.phase) {
     return this;
   }
   if (-1 !== this.configs.interrupts.indexOf(evt.type)) {
