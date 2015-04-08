@@ -46,9 +46,11 @@ the specific domain they handle well is still too narrow, and also is too easy t
 
 * Temporary variables & flags: solved the practical issues quickly but also painfully, especially when the code grow
   faster than Jack's beans
+
 * State machine: solve the 'asynchronous if...else' and event dispatching issues with a substantial theory, but most
   of implementations are all with too much details that never be described in the clear state-diagram, and thus
   the code become very twisted and messy
+
 * Wrapped, or native Promise: the de facto solution to sequentialize asynchronous operations. Most of tricky parts
   that native Promise doesn't cover could be wiped out with extended Promises libraries. However, it doesn't care events,
   so how to weave these two different kinds of asynchronous modes is still a serious issue
@@ -69,7 +71,7 @@ some principles:
    the most clear way to handle events with the following program state changes. In fact, every event handler changes object or other
    program states should be treated as a new state of the state machine, and in this way it would be much clear than managing it
    with the only monolithic stateful object, which is unfortunately the most naïve way to handle event with specific context,
-   due to the popularity of EventTarget API. A properly designed state machine could help us not only to avoid handle these complex
+   due to the popularity of EventTarget API[4]. A properly designed state machine could help us not only to avoid handle these complex
    changes within the single object, but also to describe conditions and the progress of transferring clearly.
 
 3. Events happen every moment, so to queue them is the most basic and important premise of event handling: in Gaia we aren't
@@ -87,6 +89,87 @@ some principles:
    all program states, but **multiple state machines** which are encapsulated as components. Each component contains necessary
    states and the resources they control, and parents and children could communicate with each other with event messages.
 
+The result of forming these principles to actual code is the architecture Gleipnir, which named from the Gaia screen locker it firstly
+born for. It not only provides necessary libraries to help user to create UI programs as above descriptions, but also some ready-to-use
+UI components that verify whether the ideas work well in the real world.
+
+Following are basic components of Gleipnir, with the link to their individual README that contains more details about the component.
+
+* Component
+* State
+* Source
+* View
+
+## Overview
+
+In Gleipnir we use component pattern to construct our program. Each component could contain several child components. And for each component,
+there would be one major UI or headless function controlled by the component. The only methods parents could control their children are to
+initialize and destroy the children. Other detailed information should be exchanged via the standard Event interface.
+
+### Component & State
+
+**Component** in general is an EventTarget, which would receive all events relevant to the function, and execute the corresponding state changes.
+However, it differs from the traditional EventTarget, which is just an plain object with the 'handleEvent' method. Since this approach would
+lead to the disaster of complicated internal state management. To avoid this, the major event handlers in one component are several individual
+**States**, which could command the component to perform specific behaviors according to the incoming events, and if the behaviors are extremely different
+from the current one, it could **transfer** to the next State. In fact, we encourage each component to have as much as possible States, so that
+it could also prevent the notorious 'if...else' hell which usually grows too complicated to handle different events with various intentions.
+
+For example, the clock component (widget) on screen locker has 3 States: Setup, Tick and Suspend. The Setup state would initialize the widget
+when screen locker is on, which is the few things its parent (screen locker) need to command the child (to start or stop itself). After the
+initialization, the Setup state would transfer to the next Tick state, and then the Tick state would update the UI clock every minute. For
+the widget, Suspend state would be reached when user unlock the screen or the device has been asleep because user pressed the power button.
+However, if user press the button twice, or user just lock the device again, the Suspend state would receive the event and then transfer to
+the Tick state immediately.
+
+![Architecture of clock widgets](https://docs.google.com/drawings/d/1AUuHvglUHKOvwomdQLaJsIEdoDJAWjL70a2ZiXM6Z44/pub?w=798&h=243)
+
+The most important thing in the widget design is, we don't manage all internal states in one instance. Yes, the component still has one single **Resource
+Keeper**, which stores fetched data, flags, variables and other *properties* belongs to the component just like the **model** in traditional MVC,
+but now the controllers split to various States, each one is corresponding to the specific event set and the certain transferring requests (the **interrupts**).
+
+![The difference between events and interrputs](https://docs.google.com/drawings/d/1FQ9QcMuH946Dd3Tp1jzP3lWcrqRhOKVOrwN8pHzLYV0/pub?w=746&h=343)
+
+This benefits us because we don't need to implement one single controller to manage every possible internal state changes, and those conflicted
+changes could be separated because we could **transfer** our controllers (States) to formally switch them on/off. In our architecture, every State
+in the same component could be transferred in and out, but only one foreground State could be activated. However, if the new one get activated,
+the previous state must be stopped properly to prevent racing.
+
+![How state transfers when events come](https://docs.google.com/drawings/d/1FvpMJyMfg15PPh_4DQjLH8Fpi5kB8ss4XmCY7iTc3Ug/pub?w=983&h=540)
+
+It shows that one component is in fact with **multiple-controllers** with single Resource Keeper (model). The major reason of why we need to
+keep multiple-controllers is that different event sets are actually representing different behavior requests, so to expect only one
+controller to manage them well all is impractical. For example, the power button pressing event means the clock should start or stop ticking, which is
+totally irrelevant to the clock event request to update the UI every minute. Thus, rather to have only one 'ClockController', we have three States
+to response those event sets, and manage the same bulk of resources.
+
+### View
+
+Although DOMs look like what the Resource Keeper should manage, component would delegate the duty of rendering UI to a **View**. However, in our design
+the view should not tight couple with the component, and the view may also render nothing relevant to UI. For example, if we implement a CSV component,
+it should **render** the stored data to a file, this is totally irrelevant to any pixels on the screen. Another example is we could make a sound synthetic
+system that **renders** to speaker, or a logger that **renders** to console, HTML, etc. The most important is rendering logic should only depends on the
+data submitted by the activated State, and put all advanced rendering things like Virtual DOM in the implementation of the view. This could prevent States
+need to control the actual details of rendering while it should focus on resource manipulations and event handling.
+
+![](https://docs.google.com/drawings/d/1EKHhvcv7Y2M6Z1hD1-Z_jiJg3Q9LKFhJd7M2alQG_TI/pub?w=622&h=460)
+
+And since the views are so various, component should be able to adapt different views under different circumstances. For example, one may hope to combine
+a component with **DebuggingView** to see if the data submitted by State is correct for the test purpose, and then switch to the **DOMView** when it's ready
+for production. In order to do this, View is not an fixed ingredient of Component, but an argument that could be assigned while the parent instantiates its
+child. So that the View is in the has-a relation with Component, and could be replaced easily.
+
+Moreover, if we think about what does a View would do, we could realize it's the **effect** a component would perform. So a CSV component with **File** view
+would perform **IO** effect, while the same component now with **DOM** view would perform **UI** effect. It could even equip with the **Sound** view to play
+a song to user, although the noise from a CSV content may break one's speaker. With such recognition, we could treat out Component system as a synthetic factory
+of different effects, which may analog to **decorate pattern** in OOP, or somewhat **Monad** taste in FP. We could even claim that components without any valid
+**View** are **pure**, since they in theory do no effects in the real world.
+
+![Overview of Component, View and State](https://docs.google.com/drawings/d/1uu8qClRwbfFg4ODna-4WZoTKzU64LkDF2gg4I4W1FsY/pub?w=309&h=262)
+
+---
+
 [1]: http://www.ecma-international.org/ecma-262/5.1/
 [2]: http://doc.qt.digia.com/4.6/qobject.html#connect
 [3]: https://msdn.microsoft.com/en-us/library/ms366768(v=vs.110).aspx
+[4]: https://developer.mozilla.org/en-US/docs/Web/API/EventTarget
