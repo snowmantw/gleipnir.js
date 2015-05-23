@@ -24,19 +24,16 @@ export function Runtime() {
 
 /**
  * When the stack of DSL changes, evaluate the Language.Node.
+ * Note: since in this DSL we needn't 'exit' node, we don't handle it.
+ * For some other DSL that may return something, the 'exit' node must
+ * keep a final stack with only result node inside as ther return value.
  */
 Runtime.prototype.onchange = function(instance, change, stack) {
-  if ('exit' !== change.type) {
-    // Since we don't need to keep things in stack until we have
-    // real analyzers, the 'onchange' handler would return empty stack
-    // to let the language runtime clear the stack every instruction.
-    this[change.type].apply(this, change.args);
-    return [];
-  } else {
-    // If it's 'exit' step we need to return the result.
-    var result = this[change.type].apply(this, change.args);
-    return [result];
-  }
+  // Since we don't need to keep things in stack until we have
+  // real analyzers, the 'onchange' handler would return empty stack
+  // to let the language runtime clear the stack every instruction.
+  this[change.type].apply(this, change.args);
+  return [];
 };
 
 

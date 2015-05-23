@@ -29,7 +29,7 @@ export function Interface(runtime) {
   this._runtime = runtime;
   this._evaluator = (new Language.Evaluate())
     .analyzer(this._analyzeOrder.bind(this))
-    .intepreter(this._interpret.bind(this));
+    .interpreter(this._interpret.bind(this));
 }
 
 Interface.prototype.start = Language.define('start', 'begin');

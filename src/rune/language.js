@@ -110,10 +110,12 @@ export function Language() {}
  * members of the 'this', the 'this' should have 'this.stack' and 'this.context'
  * as the method requires.
  *
- * If it's 'exit' node, means the session is ended and the interpreter should
+ * If it's an 'exit' node, means the session is ended and the interpreter should
  * return a stack contains only one node as the result of the session, or the
  * session returns nothing.
  *
+ * Please note that from the description above, 'end' means stack (substack)
+ * ends. It's totally irrelevant to 'exit'.
  */
 Language.define = function(method, as) {
   return function(...args) {
@@ -218,11 +220,11 @@ Language.Evaluate.prototype.analyzer = function(a) {
  * should return a new stack contains only one final result node. If there
  * is no such node, the result of this session is 'undefined'.
  */
-Language.Evaluate.prototype.intepreter = function(inpt) {
-  // The Language would give the default context.
+Language.Evaluate.prototype.interpreter = function(inpt) {
+  // The customized language should give the default context.
   return (context, change, stack) => {
     try {
-      // Analyzer could change the context.
+      // Analyzers could change the context.
       this._analyzers.reduce((ctx, analyzer) => {
         analyzer.call({}, context, change, stack);
       }, context);

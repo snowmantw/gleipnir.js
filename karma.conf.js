@@ -7,10 +7,9 @@ module.exports = function(config) {
     // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: '',
 
-
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['mocha', 'requirejs', 'chai', 'sinon', 'traceur'],
+    frameworks: ['mocha', 'requirejs', 'chai', 'sinon'],
 
 
     // list of files / patterns to load in the browser
@@ -29,8 +28,8 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      'src/**/*.js': ['traceur'],
-      'test/**/*_spec.js': ['traceur']
+      'src/**/*.js': ['babel'],
+      'test/**/*_spec.js': ['babel']
     },
 
 
@@ -65,17 +64,25 @@ module.exports = function(config) {
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
     singleRun: false,
-
-    traceurPreprocessor: {
-      // options passed to the traceur-compiler 
-      // see traceur --longhelp for list of options 
+    babelPreprocessor: {
       options: {
-        sourceMaps: true,
-        modules: 'amd'
+        sourceMap: 'inline',
+        modules: 'amd',
+        resolveModuleSource: function(source, file) {
+          // Since Karma serve files under '/base', but to add it to
+          // every importing path is unaccetable, so we append it here.
+          var prefix = new RegExp('^\/base');
+          if (!prefix.test(source)) {
+            source = '/base/' + source;
+          }
+          return source;
+        }
       },
-      // custom filename transformation function 
-      transformPath: function(path) {
-        return path;
+      filename: function(file) {
+        return file.originalPath;
+      },
+      sourceFileName: function(file) {
+        return file.originalPath;
       }
     }
   });

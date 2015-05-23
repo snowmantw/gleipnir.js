@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "devDependencies": {
     "karma": "^0.12.31",
+    "karma-babel-preprocessor": "^5.1.0",
     "karma-chai": "^0.1.0",
     "karma-sinon": "^1.0.4",
     "karma-traceur-preprocessor": "^0.4.0",

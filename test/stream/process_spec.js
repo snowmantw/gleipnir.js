@@ -12,7 +12,7 @@ describe(`Process > `, () => {
     var process = new Process();
     try {
       process.stop().start().next(() => {
-        done('Error: should not execute this step (stop before start)');
+        done(`Error: should not execute this step (stop before start)`);
       });
     } catch(e) {
       done();
