@@ -46,7 +46,10 @@ export function BasicComponent(view) {
   };
   this.logger = new StateLogger();
   this.view = view;
-};
+  // Should at least appoint these.
+  this.type = null;
+  this._setupState = null;
+}
 
 /**
  * State' phase is the component's phase.
@@ -101,17 +104,9 @@ BasicComponent.prototype.start = function(resources) {
   // Get the initialization state and let it fetch & set all.
   // 'initializeStateMachine', if Java doomed the world.
   // (and this is ECMAScript, a language (partially) inspired by Scheme!).
-  this._activeState = this.setup();
+  this._activeState = this._setupState;
   return this._activeState.start();
 };
-
-/**
- * Receive the component instance and return a initialization state
- * which would fetch resources and set properties for this component.
- *
- * The concrete component should implement this.
- */
-BasicComponent.prototype.setup = function(component) {};
 
 BasicComponent.prototype.stop = function() {
   return this._activeState.stop()

@@ -16,7 +16,6 @@ export function Builder() {
     .analyzer(this._analyzer.bind(this))
     .interpreter(this._interpret.bind(this));
   this._state = null;
-  this._buildinfo = {};
 }
 
 // The language interface.
@@ -83,7 +82,7 @@ Builder.prototype._analyzer = function(context, node, stack) {
     case 'build':
     case 'instance':
       // Check if necessary properties are missing.
-      // Currently only name is necessary.
+      // Currently only 'type' is necessary.
       if (!context._info.type || 'string' !== typeof context._info.type) {
         throw new Error(`A state should at least with type`);
       }
