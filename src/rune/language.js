@@ -148,6 +148,10 @@ Language.define = function(method, as) {
         this.stack.push(node);  // the last node of the stack.
         resultstack =
           this.onchange(this.context, node, this.stack);
+        if (!resultstack) {
+          throw new Error(`'exit' node '${node.type}' should
+            return a resultstack.`);
+        }
         return resultstack[0];
     }
     // If the handler updates the stack, it would replace the existing one.

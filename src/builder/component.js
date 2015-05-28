@@ -1,7 +1,8 @@
 'use strict';
 
+import { Language } from 'src/rune/language.js';
 import { BasicState } from 'src/state/basic_state.js';
-import { BasicComponent } from 'src/state/basic_component.js';
+import { BasicComponent } from 'src/component/basic_component.js';
 
 export function Builder() {
   this.context = {
@@ -73,7 +74,7 @@ Builder.prototype._interpret = function(context, node, stack) {
   }
   // If the information are gathered, according to the information
   // user gave to build a state.
-  if ('build' !== node.type) {
+  if ('build' !== node.type && 'instance' !== node.type) {
     // Since all these methods are only need one argument.
     context._info[node.type] = node.args[0];
     return;
@@ -84,6 +85,7 @@ Builder.prototype._interpret = function(context, node, stack) {
     this.resources = _info.resources || this.resources;
     this.configs = _info.configs || this.configs;
     this.logger = _info.logger || this.logger;
+    this.type = _info.type;
     this._setupState = new _info.setup(this);
   };
   context._component.prototype = Object.create(BasicComponent.prototype);
@@ -98,7 +100,11 @@ Builder.prototype._interpret = function(context, node, stack) {
     return stack;
   }
   if ('instance' === node.type) {
-    stack = [ context._component.apply({}, node.args) ];
+    // Since 'instance' may pass some arguments to the constructor,
+    // we need to apply it rather than new it.
+    var target = Object.create(context._component.prototype);
+    context._component.apply(target, node.args);
+    stack = [ target ];
     return stack;
   }
 };

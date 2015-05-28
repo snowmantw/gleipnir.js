@@ -1,5 +1,6 @@
-/* global StateLogger */
 'use strict';
+
+import { Logger as StateLogger } from 'src/logger/state.js';
 
 /**
  * Component provides:
@@ -44,6 +45,10 @@ export function BasicComponent(view) {
       debug: false    // turn on it when we're debugging this component
     }
   };
+
+  // The default logger.
+  // A customized logger is accetable if it's with the 'transfer' method
+  // for logging the state transferring.
   this.logger = new StateLogger();
   this.view = view;
   // Should at least appoint these.
@@ -75,8 +80,8 @@ BasicComponent.prototype.transferTo = function(clazz, reason = {}) {
   var nextState = new clazz(this);
   var currentState = this._activeState;
   this._activeState = nextState;
-  this.logger.transfer(currentState.configs.name,
-      nextState.configs.name, reason);
+  this.logger.transfer(currentState.configs.type,
+      nextState.configs.type, reason);
   return currentState.stop()
     .next(() => nextState.start());
 };
