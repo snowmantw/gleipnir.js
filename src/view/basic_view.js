@@ -15,8 +15,7 @@
  * 'then-able' ability to the 'render' method.
  * We don't make any assumptions in this basic interface.
  **/
-(function(exports) {
-  var GleipnirBasicView = function() {};
+  export function BasicView() {}
 
   /**
    * If it's a UI view but without virtual DOM,
@@ -26,7 +25,4 @@
    * With virtual DOM it could be very simple, but this depends on the
    * facilities of the project.
    */
-  GleipnirBasicView.prototype.render = function(data) {};
-  exports.GleipnirBasicView = GleipnirBasicView;
-})(window);
-
+  BasicView.prototype.render = function(data) {};
