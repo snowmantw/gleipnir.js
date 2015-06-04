@@ -3,11 +3,22 @@
   "description": "Gleipnir.js - a library for UI programming",
   "version": "0.0.1",
   "devDependencies": {
+    "gulp": "^3.9.0",
+    "gulp-babel": "^5.1.0",
+    "gulp-copy": "0.0.2",
+    "gulp-jshint": "^1.11.0",
+    "gulp-karma": "0.0.4",
+    "gulp-rjs": "^0.1.0",
+    "gulp-symlink": "^2.1.0",
+    "gulp-util": "^3.0.5",
+    "jshint-stylish": "^2.0.0",
     "karma": "^0.12.31",
     "karma-babel-preprocessor": "^5.1.0",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^0.1.12",
     "karma-sinon": "^1.0.4",
-    "sinon": "^1.14.1"
+    "nomnom": "^1.8.1",
+    "sinon": "^1.14.1",
+    "streamqueue": "^0.1.3"
   }
 }

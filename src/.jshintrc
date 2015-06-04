@@ -1,5 +1,4 @@
 {
-  "node" true,
   "camelcase": false,
   "curly": true,
   "forin": false,
@@ -24,6 +23,7 @@
   "laxcomma": true,
   "proto": true,
 
+  "browser": true,
   "devel": true,
   "nonstandard": true,
   "worker": true,
