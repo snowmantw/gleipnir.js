@@ -25,33 +25,47 @@ var watch = require('gulp-watch');
 var sourcemaps = require('gulp-sourcemaps');
 var concat = require('gulp-concat');
 var babel = require('gulp-babel');
-var gcopy = require('gulp-copy');
+var gclean = require('gulp-clean');
 
 /**
  * For paths, please make sure they're all resolved.
  */
 var Builder = function(configs) {
+  var path = require('path');
   configs = configs || {};
   this.configs = {};
   this.configs.path = configs.path || {
-    root: __dirname + '/../',
-    stage: __dirname + '/../build_stage',
-    source: __dirname + '/../src/',
-    test: __dirname + '/../test/',
-    karmaconfig: __dirname + '/../karma.conf.js',
-    dist: __dirname + '/../dist/'
+    root: path.resolve(__dirname + '/../') + '/',
+    stage: path.resolve(__dirname + '/../build_stage/') + '/',
+    source: path.resolve(__dirname + '/../src/') + '/',
+    test: path.resolve(__dirname + '/../test/') + '/',
+    karmaconfig: path.resolve(__dirname + '/../karma.conf.js') + '/',
+    dist: path.resolve(__dirname + '/../dist/') + '/'
   };
   this.configs.name = configs.name || {
-    dist: 'gleipnir.js'
+    dist: 'gleipnir.js',
+    source: 'src',
+    test: 'test'
   };
 };
 
 Builder.prototype.setup = function() {
 
-  gulp.task('stage', (function() {
+  gulp.task('clean-stage', (function() {
+    return gulp.src(this.configs.path.stage, { read: false })
+      .pipe(gclean());
+  }).bind(this));
+
+  gulp.task('stage', ['clean-stage'], (function() {
+    this.configs.path.stagetest =
+      this.configs.path.stage + this.configs.name.test + '/';
+    this.configs.path.stagesrc =
+      this.configs.path.stage + this.configs.name.src + '/';
+    var fs = require('fs');
+    fs.mkdirSync(this.configs.path.stage);
     return gulp.src([this.configs.path.test + '**/*.js',
                      this.configs.path.source + '**/*.js'])
-      .pipe(gcopy.copy(this.configs.path.buildstage));
+      .pipe(gulp.dest(this.configs.path.stage));
   }).bind(this));
 
   gulp.task('jshint', (function() {
@@ -89,8 +103,8 @@ Builder.prototype.setup = function() {
   }).bind(this));
 
   // We don't need to babel tests, since Karma would do that.
-  gulp.task('dist', (function() {
-    return gulp.src(this.configs.path.source + '**/*.js')
+  gulp.task('dist', ['stage'], (function() {
+    return gulp.src(this.configs.path.stagesrc+ '**/*.js')
       .pipe(sourcemaps.init())
       .pipe(babel())
       .pipe(concat(this.configs.name.dist))
