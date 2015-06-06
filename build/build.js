@@ -26,6 +26,7 @@ var concat = require('gulp-concat');
 var babel = require('gulp-babel');
 var gclean = require('gulp-clean');
 var rseq = require('run-sequence')
+var header = require('gulp-header');
 
 /**
  * For paths, please make sure they're all resolved.
@@ -90,7 +91,9 @@ Builder.prototype.setup = function() {
 
   // We always run 'jshint' before 'test'.
   gulp.task('test', ['jshint'], (function() {
-    return gulp.src(this.configs.path.test + '**/*.js', { read: false })
+    // XXX: a sad trick from https://github.com/lazd/gulp-karma/issues/7
+    var files = ["undefined.js"];
+    return gulp.src(files)
     .pipe(karma({
       configFile: this.configs.path.karmaconfig,
       action: 'run'
@@ -104,7 +107,7 @@ Builder.prototype.setup = function() {
     watch([this.configs.path.test + '**/*.js',
            this.configs.path.source + '**/*.js'],
     function() {
-      gulp.start('unit-test');
+      gulp.start('test');
     });
   }).bind(this));
 
@@ -113,13 +116,25 @@ Builder.prototype.setup = function() {
           .pipe(symlink('.git/hooks/pre-commit', {force: true}));
   }).bind(this));
 
-  // We don't need to babel tests, since Karma would do that.
+  // We don't need to babelize tests, since Karma would do that.
   gulp.task('dist', ['stage'], (function() {
+    var pkg = require(this.configs.path.root + 'package.json');
+    var banner = ['/**',
+      ' * <%= pkg.name %> - <%= pkg.description %>',
+      ' * @version v<%= pkg.version %>',
+      ' * @link <%= pkg.homepage %>',
+      ' * @license <%= pkg.license %>',
+      ' */',
+      ''].join('\n');
+
     return gulp.src(this.configs.path.stagesrc+ '**/*.js')
       .pipe(sourcemaps.init())
-      .pipe(babel())
+      .pipe(babel({
+        modules: 'amd'
+      }))
       .pipe(concat(this.configs.name.dist))
       .pipe(sourcemaps.write())
+      .pipe(header(banner, { pkg : pkg } ))
       .pipe(gulp.dest(this.configs.path.dist));
   }).bind(this));
 };
