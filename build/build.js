@@ -1,4 +1,3 @@
-/*jslint node: true */
 'use strict';
 
 /**
@@ -26,6 +25,7 @@ var sourcemaps = require('gulp-sourcemaps');
 var concat = require('gulp-concat');
 var babel = require('gulp-babel');
 var gclean = require('gulp-clean');
+var rseq = require('run-sequence')
 
 /**
  * For paths, please make sure they're all resolved.
@@ -56,21 +56,32 @@ Builder.prototype.setup = function() {
       .pipe(gclean());
   }).bind(this));
 
-  gulp.task('stage', ['clean-stage'], (function() {
+  gulp.task('create-stage', (function(cb) {
+    var fs = require('fs');
+    fs.mkdir(this.configs.path.stage, cb);
+  }).bind(this));
+
+  gulp.task('stage-src', (function() {
+    this.configs.path.stagesrc =
+      this.configs.path.stage + this.configs.name.source + '/';
+
+    return gulp.src(this.configs.path.source + '**/*.js')
+      .pipe(gulp.dest(this.configs.path.stagesrc));
+  }).bind(this));
+
+  gulp.task('stage-test', (function() {
     this.configs.path.stagetest =
       this.configs.path.stage + this.configs.name.test + '/';
-    this.configs.path.stagesrc =
-      this.configs.path.stage + this.configs.name.src + '/';
-    var fs = require('fs');
-    fs.mkdirSync(this.configs.path.stage);
-    return gulp.src([this.configs.path.test + '**/*.js',
-                     this.configs.path.source + '**/*.js'])
-      .pipe(gulp.dest(this.configs.path.stage));
+
+    return gulp.src(this.configs.path.test + '**/*.js')
+      .pipe(gulp.dest(this.configs.path.stagetest));
+  }).bind(this));
+
+  gulp.task('stage', (function(cb) {
+    rseq('clean-stage', 'create-stage', 'stage-src', 'stage-test', cb);
   }).bind(this));
 
   gulp.task('jshint', (function() {
-    // if we are going to lint against multiple path, just append another
-    // gulp.src('another_path/*.js') in argument list of streamqueue
     return streamqueue({objectMode: true},
        gulp.src([this.configs.path.test + '**/*.js',
                  this.configs.path.source + '**/*.js']))

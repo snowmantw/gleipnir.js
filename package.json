@@ -19,6 +19,7 @@
     "karma-chrome-launcher": "^0.1.12",
     "karma-sinon": "^1.0.4",
     "nomnom": "^1.8.1",
+    "run-sequence": "^1.1.0",
     "sinon": "^1.14.1",
     "streamqueue": "^0.1.3"
   }

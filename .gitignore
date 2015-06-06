@@ -35,3 +35,5 @@ packages/*
 .env
 
 node_modules
+build_stage
+npm-debug.log
