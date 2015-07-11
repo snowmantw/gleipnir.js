@@ -8,7 +8,8 @@ var Config = function() {
     source: __dirname + '/../src/',
     test: __dirname + '/../test/',
     karmaconfig: __dirname + '/../karma.conf.js',
-    dist: __dirname + '/../dist/'
+    dist: __dirname + '/../dist/',
+    webpackconfig: __dirname + '/../webpack.conf.js'
   };
   // Collected from the environment.
   this.opts = null;
