@@ -121,7 +121,7 @@ Builder.prototype.setup = function() {
           .pipe(symlink('.git/hooks/pre-commit', {force: true}));
   }).bind(this));
 
-  gulp.task('compile', ['stage'], (function() {
+  gulp.task('transform', ['stage'], (function() {
     var pkg = require(this.configs.path.root + 'package.json');
     var banner = ['/**',
       ' * <%= pkg.name %> - <%= pkg.description %>',

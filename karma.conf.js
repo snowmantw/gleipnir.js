@@ -8,9 +8,10 @@ module.exports = function(config) {
       'tests.bundle.js'
     ],
     preprocessors: {
-      'tests.bundle.js': [ 'webpack' ]
+      'tests.bundle.js': [ 'webpack', 'sourcemap' ]
     },
     webpack: {
+      devtool: 'inline-source-map',
       resolve: { root: __dirname },
       module: {
         loaders: [
@@ -26,27 +27,6 @@ module.exports = function(config) {
     logLevel: config.LOG_INFO,
     autoWatch: true,
     browsers: ['Firefox'],
-    singleRun: false,
-    babelPreprocessor: {
-      options: {
-        sourceMap: 'inline',
-        modules: 'amd',
-        resolveModuleSource: function(source, file) {
-          // Since Karma serve files under '/base', but to add it to
-          // every importing path is unaccetable, so we append it here.
-          var prefix = new RegExp('^\/base');
-          if (!prefix.test(source)) {
-            source = '/base/' + source;
-          }
-          return source;
-        }
-      },
-      filename: function(file) {
-        return file.originalPath;
-      },
-      sourceFileName: function(file) {
-        return file.originalPath;
-      }
-    }
+    singleRun: true
   });
 };

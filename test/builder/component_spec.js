@@ -10,6 +10,7 @@ describe(`Builder::component >`, () => {
   });
 
   it(`should be able to build a component with all things`, () => {
+    document.querySelector.restore();
     var stubQuerySelector = sinon.stub(document, 'querySelector',
     function(id) {
       var div = document.createElement('div');
@@ -61,5 +62,6 @@ describe(`Builder::component >`, () => {
     expect(mockLogger.transfer.calledWith('mockSetup', 'mockStart', {}))
       .to.be.true;
     expect(stubStartStateStart.called).to.be.true;
+    document.querySelector.restore();
   });
 });

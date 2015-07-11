@@ -6,6 +6,7 @@
  */
 module.exports = function(configs) {
   return {
+    devtool: 'inline-source-map',
     output: { filename: 'gleipnir.js' },
     resolve: { root: configs.path.stage },
     module: {
