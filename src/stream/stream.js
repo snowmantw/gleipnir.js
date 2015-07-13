@@ -1,6 +1,6 @@
 'use strict';
 
-import { Process } from 'src/stream/process/process.js';
+import { Process } from 'src/process/process.js';
 
 /**
  * Combine the abilities of the event handling and asynchronous operations

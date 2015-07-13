@@ -4,9 +4,9 @@
  * To log state transferring in a proper way, rather dump raw console
  * messages and then overwhelm it.
  */
-export function Logger() {}
+export function State() {}
 
-Logger.prototype.start =
+State.prototype.start =
 function lss_start(configs) {
   this.stateStack = [];
   this.configs = {
@@ -20,7 +20,7 @@ function lss_start(configs) {
   return this;
 };
 
-Logger.prototype.debug =
+State.prototype.debug =
 function lss_debug() {
   if (this.configs.debug) {
     this.log.apply(this, ['[I] '].concat(Array.from(arguments)));
@@ -28,7 +28,7 @@ function lss_debug() {
   return this;
 };
 
-Logger.prototype.verbose =
+State.prototype.verbose =
 function lss_verbose() {
   if (this.configs.verbose) {
     this.log.apply(this, ['[V] '].concat(Array.from(arguments)));
@@ -36,14 +36,14 @@ function lss_verbose() {
   return this;
 };
 
-Logger.prototype.warning = function lss_warning() {
+State.prototype.warning = function lss_warning() {
   if (this.configs.warning || this.configs.verbose) {
     this.log.apply(this, ['[!] '].concat(Array.from(arguments)));
   }
   return this;
 };
 
-Logger.prototype.error =
+State.prototype.error =
 function lss_error() {
   if (this.configs.error || this.configs.warning ||
       this.configs.verbose) {
@@ -59,7 +59,7 @@ function lss_error() {
  *
  * would print out the message and the stack.
  */
-Logger.prototype.stack = function lss_stack() {
+State.prototype.stack = function lss_stack() {
   this.log((new Error()).stack);
   return this;
 };
@@ -75,7 +75,7 @@ Logger.prototype.stack = function lss_stack() {
  * @param to {string} - to state type
  * @param conditions {object} - under what conditions we do the transferring
  */
-Logger.prototype.transfer =
+State.prototype.transfer =
 function lss_transfer(from, to, conditions = {}) {
   if (!this.configs.debug) {
     return;
@@ -100,27 +100,27 @@ function lss_transfer(from, to, conditions = {}) {
  *
  * which can be rendered as a real graph.
  */
-Logger.prototype.graph =
+State.prototype.graph =
 function lss_graph() {
   return this.stateStack.reduce((prev, info) => {
     return prev.concat([info.from, info.conditions, info.to]);
   }, []);
 };
 
-Logger.prototype.log =
+State.prototype.log =
 function lss_log() {
   var reporter = this.configs.reporter;
   reporter.apply(this, arguments);
   return this;
 };
 
-Logger.prototype.stop =
+State.prototype.stop =
 function lss_stop() {
   this.stateStack.length = 0;
   return this;
 };
 
-Logger.prototype.consoleReporter =
+State.prototype.consoleReporter =
 function lss_consoleReporter() {
   console.log.apply(console, arguments);
   return this;

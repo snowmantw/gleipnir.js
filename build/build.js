@@ -4,6 +4,8 @@
  * TODO: If we add more functions than this, we should refactor it with
  * one or several build modules.
  */
+var fs = require('fs');
+var syspath = require('path');
 var gulp = require('gulp');
 var jshint = require('gulp-jshint');
 var stylish = require('jshint-stylish');
@@ -16,10 +18,12 @@ var sourcemaps = require('gulp-sourcemaps');
 var concat = require('gulp-concat');
 var babel = require('gulp-babel');
 var gclean = require('gulp-clean');
+var filelist = require('gulp-filelist');
 var rseq = require('run-sequence')
 var header = require('gulp-header');
 var webpack = require('webpack-stream');
 var glob = require('glob');
+var jsonfile = require('jsonfile');
 
 /**
  * For paths, please make sure they're all resolved.
@@ -36,16 +40,50 @@ var Builder = function(configs) {
     test: path.resolve(__dirname + '/../test/') + '/',
     karmaconfig: path.resolve(__dirname + '/../karma.conf.js'),
     dist: path.resolve(__dirname + '/../dist/') + '/',
-    webpackconfig: path.resolve(__dirname + '/../webpack.conf.js')
+    webpackconfig: path.resolve(__dirname + '/../webpack.conf.js'),
+    exports: path.resolve(__dirname + '/../build_stage/exports.js'),
+    modules: path.resolve(__dirname + '/../build_stage/modules.json'),
   };
   this.configs.name = configs.name || {
     dist: 'gleipnir.js',
     source: 'src',
-    test: 'test'
+    test: 'test',
+    exports: 'gleipnir.js'  // a exporting module imports all modules.
   };
+  this.configs.entries = {};
 };
 
 Builder.prototype.setup = function() {
+
+  /* Find all modules and export it in the export file */
+  gulp.task('list-modules', ['stage'], (function() {
+    var files = glob.sync(this.configs.path.stagesrc + '**/*.js');
+    return gulp.src(files)
+      .pipe(filelist('modules.json', { absolute: true }))
+      .pipe(gulp.dest(this.configs.path.stage))
+  }).bind(this));
+
+  gulp.task('generate-exports', ['list-modules'], (function() {
+    var stagemodules = jsonfile.readFileSync(this.configs.path.modules);
+    var entries = stagemodules.reduce((function(entries, modulepath) {
+      // Category.
+      var catname = syspath.dirname(modulepath)
+        .replace(this.configs.path.stagesrc, '')
+        .replace(/\/(.)/g, function(match) { return match[1].toUpperCase(); })
+        .replace(/^(.)/, function(match) { return match.toUpperCase(); });
+      var filename = syspath.basename(modulepath, '.js');
+      var modulename = catname + filename
+        .replace(/_(.)/g, function(match) { return match[1].toUpperCase(); })
+        .replace(/^(.)/, function(match) { return match.toUpperCase(); });
+      if (!entries[catname]) {
+        entries[catname] = [ modulepath ]
+      } else {
+        entries[catname].push(modulepath);
+      }
+      return entries;
+    }).bind(this), {});
+    this.configs.entries = entries;
+  }).bind(this));
 
   gulp.task('clean-stage', (function() {
     return gulp.src(this.configs.path.stage, { read: false })
@@ -95,9 +133,9 @@ Builder.prototype.setup = function() {
   }).bind(this));
 
   // We always run 'jshint' before 'test'.
-  gulp.task('test', ['jshint'], (function() {
+  gulp.task('test', ['stage'], (function() {
     // XXX: a sad trick from https://github.com/lazd/gulp-karma/issues/7
-    var files = ["undefined.js"];
+    var files = ['undefined.js'];
     return gulp.src(files)
     .pipe(karma({
       configFile: this.configs.path.karmaconfig,
@@ -121,7 +159,7 @@ Builder.prototype.setup = function() {
           .pipe(symlink('.git/hooks/pre-commit', {force: true}));
   }).bind(this));
 
-  gulp.task('transform', ['stage'], (function() {
+  gulp.task('bundle', ['generate-exports'], (function() {
     var pkg = require(this.configs.path.root + 'package.json');
     var banner = ['/**',
       ' * <%= pkg.name %> - <%= pkg.description %>',
@@ -130,8 +168,7 @@ Builder.prototype.setup = function() {
       ' * @license <%= pkg.license %>',
       ' */',
       ''].join('\n');
-    var files = glob.sync(this.configs.path.stagesrc + '**/*.js');
-    return gulp.src(files)
+    return gulp.src(this.configs.path.modules)
       .pipe(webpack(require(this.configs.path.webpackconfig)(this.configs)))
       .pipe(header(banner, { pkg : pkg } ))
       .pipe(gulp.dest(this.configs.path.dist));

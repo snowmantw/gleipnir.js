@@ -1,17 +1,17 @@
 /* global describe, it, chai */
 'use strict';
-import { Process } from 'src/stream/process/process.js';
-import { Builder } from 'src/builder/state.js';
+import { Process } from 'src/process/process.js';
+import { State as StateBuilder } from 'src/builder/state.js';
 
-describe(`Builder::state > `, () => {
+describe(`StateBuilder > `, () => {
   var expect = chai.expect;
   it(`should exist`, () => {
-    expect(Builder).to.exist;
+    expect(StateBuilder).to.exist;
   });
 
   it(`should at least give a type`, (done) => {
     try {
-      (new Builder()).start().create();
+      (new StateBuilder()).start().create();
       done(`Error: should not completely creat a state without type`);
     } catch(e) {
       done();
@@ -38,7 +38,7 @@ describe(`Builder::state > `, () => {
       stop: () => {},
       onchange: stubHandler
     };
-    var foo = (new Builder()).start().type('Foo')
+    var foo = (new StateBuilder()).start().type('Foo')
       .component({ transferTo() {} })
       .events(['fooevent, barevent'])
       .interrupts(['foointerrupt'])

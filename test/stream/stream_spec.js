@@ -1,6 +1,6 @@
 /* global describe, it, chai, sinon */
 'use strict';
-import { Process } from 'src/stream/process/process.js';
+import { Process } from 'src/process/process.js';
 import { Stream } from 'src/stream/stream.js';
 
 describe(`Stream >`, function() {

@@ -7,7 +7,7 @@
  * the same architecture for real components.
  **/
 
-export function BasicStore() {
+export function Basic() {
   // Resources include DOM elements and other stuff that component
   // need to require them from the 'outside'. So even it's only a string,
   // if the one comes from System settings or XHR, it should be a resource

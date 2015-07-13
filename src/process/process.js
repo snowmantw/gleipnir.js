@@ -1,7 +1,7 @@
 'use strict';
 
-import { Interface } from 'src/stream/process/interface.js';
-import { Runtime } from 'src/stream/process/runtime.js';
+import { Interface } from 'src/process/interface.js';
+import { Runtime } from 'src/process/runtime.js';
 
 /**
  * The core component to sequentialize asynchronous steps.

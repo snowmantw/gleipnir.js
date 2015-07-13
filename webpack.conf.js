@@ -6,8 +6,13 @@
  */
 module.exports = function(configs) {
   return {
+    entry: configs.entries,
     devtool: 'inline-source-map',
-    output: { filename: 'gleipnir.js' },
+    output: {
+      library: ['Gleipnir', '[name]'],
+      libraryTarget: 'var',
+      filename: 'Gleipnir.[name].js'
+    },
     resolve: { root: configs.path.stage },
     module: {
       loaders: [

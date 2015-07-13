@@ -1,13 +1,13 @@
 'use strict';
 
-import { SourceEvent } from 'src/source/source_event.js';
+import { EventDatum } from 'src/source/event_datum.js';
 
 /**
  * Event source for Stream. One Stream can collect events from multiple
  * sources, which pass different native events (not only DOM events)
  * to Stream.
  **/
-export function SettingSource(configs) {
+export function Setting(configs) {
   this.configs = {
     settings: configs.settings || []
   };
@@ -21,7 +21,7 @@ export function SettingSource(configs) {
   this.onchange = this.onchange.bind(this);
 }
 
-SettingSource.prototype.start = function(forwardTo) {
+Setting.prototype.start = function(forwardTo) {
   this.configs.settings.forEach((key) => {
     this._collector(key, this.onchange);
   });
@@ -29,7 +29,7 @@ SettingSource.prototype.start = function(forwardTo) {
   return this;
 };
 
-SettingSource.prototype.stop = function() {
+Setting.prototype.stop = function() {
   this._forwardTo = null;
   this.configs.settings.forEach((key) => {
     this._decollector(key, this.onchange);
@@ -42,7 +42,7 @@ SettingSource.prototype.stop = function() {
  * Would transform the original 'settingName' and 'settingValue' pair as
  * 'type' and 'detail', as the event formant.
  */
-SettingSource.prototype.onchange = function(change) {
+Setting.prototype.onchange = function(change) {
   if (this._forwardTo) {
     this._forwardTo(
       new SourceEvent(change.settingName, change.settingValue));

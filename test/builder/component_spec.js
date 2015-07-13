@@ -1,16 +1,15 @@
 /* global describe, it, chai, sinon */
 'use strict';
 
-import { Builder } from 'src/builder/component.js';
+import { Component as ComponentBuilder } from 'src/builder/component.js';
 
-describe(`Builder::component >`, () => {
+describe(`ComponentBuilder >`, () => {
   var expect = chai.expect;
   it(`should exist`, () => {
-    expect(Builder).to.exist;
+    expect(ComponentBuilder).to.exist;
   });
 
   it(`should be able to build a component with all things`, () => {
-    document.querySelector.restore();
     var stubQuerySelector = sinon.stub(document, 'querySelector',
     function(id) {
       var div = document.createElement('div');
@@ -44,7 +43,7 @@ describe(`Builder::component >`, () => {
       this.stop = stubSetupStateStop.bind(this);
       this.next = function(cb) { cb(); return this; };
     };
-    var foo = (new Builder()).start().type('Foo')
+    var foo = (new ComponentBuilder()).start().type('Foo')
       .configs({ logger: { debug: true }})
       .resources({ elements: { fooCanvas: '#foo-canvas' } })
       .logger(mockLogger)
@@ -62,6 +61,6 @@ describe(`Builder::component >`, () => {
     expect(mockLogger.transfer.calledWith('mockSetup', 'mockStart', {}))
       .to.be.true;
     expect(stubStartStateStart.called).to.be.true;
-    document.querySelector.restore();
+    stubQuerySelector.restore();
   });
 });

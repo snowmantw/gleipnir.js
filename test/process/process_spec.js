@@ -1,6 +1,6 @@
 /* global describe, it, chai */
 'use strict';
-import { Process } from 'src/stream/process/process.js';
+import { Process } from 'src/process/process.js';
 
 describe(`Process > `, () => {
   var expect = chai.expect;

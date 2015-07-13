@@ -4,12 +4,12 @@
  * A settings getter/setter cache.
  * Provide as few as possible APIs like the native APIs do.
  **/
-export function SettingsCache() {
+export function Cache() {
   this.cache = {};
   this.handleSettings = this.handleSettings.bind(this);
 }
 
-SettingsCache.prototype.get = function(entry) {
+Cache.prototype.get = function(entry) {
   if (this.cache[entry]) {
     return Promise.resolve(this.cache[entry]);
   }
@@ -32,7 +32,7 @@ SettingsCache.prototype.get = function(entry) {
   });
   return promise;
 };
-SettingsCache.prototype.set = function(entry, value) {
+Cache.prototype.set = function(entry, value) {
   var resolve, reject;
   var promise = new Promise((rev, rej) => {
     resolve = rev;
@@ -50,11 +50,11 @@ SettingsCache.prototype.set = function(entry, value) {
   });
   return promise;
 };
-SettingsCache.prototype.handleSettings = function(evt) {
+Cache.prototype.handleSettings = function(evt) {
   var { settingsName, settingsValue } = evt;
   this.cache[settingsName] = settingsValue;
 };
-SettingsCache.prototype.stop = function() {
+Cache.prototype.stop = function() {
   Object.keys(this.cache).forEach((entry) => {
     navigator.mozSettings.removeObserver(entry, this.handleSettings);
   });

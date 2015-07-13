@@ -12,10 +12,10 @@ module.exports = function(config) {
     },
     webpack: {
       devtool: 'inline-source-map',
-      resolve: { root: __dirname },
+      resolve: { root: __dirname + '/build_stage' },
       module: {
         loaders: [
-          { exclude: /node_modules/,
+          { include: [/src/, /test/],
             test: /\.js$/,
             loader: 'babel-loader' }
         ]

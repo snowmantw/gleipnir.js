@@ -15,14 +15,14 @@
  * 'then-able' ability to the 'render' method.
  * We don't make any assumptions in this basic interface.
  **/
-  export function BasicView() {}
+export function Basic() {}
 
-  /**
-   * If it's a UI view but without virtual DOM,
-   * the views must handle detailed DOM manipulations
-   * manually. So UI view could be complicated.
-   *
-   * With virtual DOM it could be very simple, but this depends on the
-   * facilities of the project.
-   */
-  BasicView.prototype.render = function(data) {};
+/**
+ * If it's a UI view but without virtual DOM,
+ * the views must handle detailed DOM manipulations
+ * manually. So UI view could be complicated.
+ *
+ * With virtual DOM it could be very simple, but this depends on the
+ * facilities of the project.
+ */
+Basic.prototype.render = function(data) {};

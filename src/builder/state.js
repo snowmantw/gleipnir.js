@@ -1,12 +1,12 @@
 'use strict';
 
 import { Language } from 'src/rune/language.js';
-import { BasicState } from 'src/state/basic_state.js';
+import { Basic as BasicState } from 'src/state/basic.js';
 
 /**
  * Use this builder to build states in a component.
  */
-export function Builder() {
+export function State() {
   this.context = {
     _info: {}
   };
@@ -19,26 +19,26 @@ export function Builder() {
 }
 
 // The language interface.
-Builder.prototype.start = Language.define('start' ,'begin');
-Builder.prototype.component = Language.define('component' ,'push');
-Builder.prototype.events = Language.define('events', 'push');
-Builder.prototype.interrupts = Language.define('interrupts', 'push');
-Builder.prototype.sources = Language.define('sources', 'push');
-Builder.prototype.type = Language.define('type', 'push');
-Builder.prototype.handler = Language.define('handler', 'push');
-Builder.prototype.methods = Language.define('methods', 'push');
+State.prototype.start = Language.define('start' ,'begin');
+State.prototype.component = Language.define('component' ,'push');
+State.prototype.events = Language.define('events', 'push');
+State.prototype.interrupts = Language.define('interrupts', 'push');
+State.prototype.sources = Language.define('sources', 'push');
+State.prototype.type = Language.define('type', 'push');
+State.prototype.handler = Language.define('handler', 'push');
+State.prototype.methods = Language.define('methods', 'push');
 // To build a constructor + prototype
-Builder.prototype.build = Language.define('build', 'exit');
+State.prototype.build = Language.define('build', 'exit');
 // Besides the constructor and prototype, create an instance and return it.
-Builder.prototype.instance = Language.define('instance', 'exit');
+State.prototype.instance = Language.define('instance', 'exit');
 
 // The private methods.
-Builder.prototype.onchange = function(context, node, stack) {
+State.prototype.onchange = function(context, node, stack) {
   // When it's changed, evaluate it with analyzers & interpreter.
   return this._evaluator(context, node, stack);
 };
 
-Builder.prototype._analyzer = function(context, node, stack) {
+State.prototype._analyzer = function(context, node, stack) {
   if ('start' !== node.type && !context.started) {
     throw new Error(`Before '${node.type}', should start the builder first`);
   }
@@ -94,7 +94,7 @@ Builder.prototype._analyzer = function(context, node, stack) {
  * As an ordinary interpreting function: do some effects according to the node,
  * and return the final stack after ending.
  */
-Builder.prototype._interpret = function(context, node, stack) {
+State.prototype._interpret = function(context, node, stack) {
   if ('start' === node.type) {
     return;
   }

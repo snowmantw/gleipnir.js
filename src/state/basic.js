@@ -2,14 +2,14 @@
 
 import { Stream } from 'src/stream/stream.js';
 
-export function BasicState(component) {
+export function Basic(component) {
   // A lock to prevent transferring racing. This is because most of source
   // events are mapped into interrupts to trigger transferrings. To prevent
   // client need to implement this again and again we put the lock here.
   this._transferred = false;
   // Replace with the name of concrete state.
   this.configs = {
-    type: 'BasicState',
+    type: 'Basic',
     // Note the event means events forwarded from sources, not DOM events.
     stream: {
       events: [],
@@ -25,7 +25,7 @@ export function BasicState(component) {
 /**
  * Stream' phase is the state's phase.
  */
-BasicState.prototype.phase =
+Basic.prototype.phase =
 function() {
   return this.stream.phase();
 };
@@ -33,26 +33,26 @@ function() {
 /**
  * Derived states should extend these basic methods.
  */
-BasicState.prototype.start =
+Basic.prototype.start =
 function() {
   this.stream = new Stream(this.configs.stream);
   return this.stream.start(this.handleSourceEvent.bind(this))
     .next(this.stream.ready.bind(this.stream));
 };
 
-BasicState.prototype.stop = function() {
+Basic.prototype.stop = function() {
   return this.stream.stop();
 };
 
-BasicState.prototype.destroy = function() {
+Basic.prototype.destroy = function() {
   return this.stream.destroy();
 };
 
-BasicState.prototype.live = function() {
+Basic.prototype.live = function() {
   return this.stream.until('stop');
 };
 
-BasicState.prototype.exist = function() {
+Basic.prototype.exist = function() {
   return this.stream.until('destroy');
 };
 
@@ -60,7 +60,7 @@ BasicState.prototype.exist = function() {
  * Must transfer to next state via component's method.
  * Or the component cannot track the last active state.
  */
-BasicState.prototype.transferTo = function() {
+Basic.prototype.transferTo = function() {
   if (this._transferred) {
     this.logger.debug('Prevent transferring racing');
     var nullifized = new Stream();
@@ -79,5 +79,5 @@ BasicState.prototype.transferTo = function() {
  * If this handler return a Promise, or Process, the underlying Stream
  * can make sure the steps are queued even with asynchronous steps.
  */
-BasicState.prototype.handleSourceEvent = function() {};
+Basic.prototype.handleSourceEvent = function() {};
 

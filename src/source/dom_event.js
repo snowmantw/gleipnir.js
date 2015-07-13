@@ -1,13 +1,13 @@
 'use strict';
 
-import { SourceEvent } from 'src/source/source_event.js';
+import { EventDatum } from 'src/source/event_datum.js';
 
 /**
  * DOM event source for Stream. One Stream can collect events from multiple
  * sources, which pass different native events (not only DOM events)
  * to Stream.
  **/
-export function DOMEventSource(configs) {
+export function DOMEvent(configs) {
   this.configs = {
     events: configs.events || [],
   };
@@ -20,7 +20,7 @@ export function DOMEventSource(configs) {
   this.onchange = this.onchange.bind(this);
 }
 
-DOMEventSource.prototype.start = function(forwardTo) {
+DOMEvent.prototype.start = function(forwardTo) {
   this.configs.events.forEach((ename) => {
     this._collector(ename, this.onchange);
   });
@@ -28,7 +28,7 @@ DOMEventSource.prototype.start = function(forwardTo) {
   return this;
 };
 
-DOMEventSource.prototype.stop = function() {
+DOMEvent.prototype.stop = function() {
   this._forwardTo = null;
   this.configs.events.forEach((ename) => {
     this._decollector(ename, this.onchange);
@@ -39,9 +39,9 @@ DOMEventSource.prototype.stop = function() {
 /**
  * For forwarding to the target.
  */
-DOMEventSource.prototype.onchange = function(domevt) {
+DOMEvent.prototype.onchange = function(domevt) {
   if (this._forwardTo) {
-    var sourceEvent = new SourceEvent(
+    var sourceEvent = new EventDatum(
       domevt.type, domevt.detail, domevt);
     this._forwardTo(sourceEvent);
   }

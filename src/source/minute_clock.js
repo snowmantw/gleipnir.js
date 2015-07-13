@@ -1,11 +1,11 @@
 'use strict';
 
-import { SourceEvent } from 'src/source/source_event.js';
+import { EventDatum } from 'src/source/event_datum.js';
 
 /**
  * A source fire events every clock minutes.
  **/
-export function MinuteClockSource(configs) {
+export function MinuteClock(configs) {
   this.configs = {
     type: configs.type,
     interval: 60000       // one minute.
@@ -17,7 +17,7 @@ export function MinuteClockSource(configs) {
   this.onchange = this.onchange.bind(this);
 }
 
-MinuteClockSource.prototype.start = function(forwardTo) {
+MinuteClock.prototype.start = function(forwardTo) {
   this._forwardTo = forwardTo;
   var seconds = (new Date()).getSeconds();
   // If it's the #0 second of that minute,
@@ -32,7 +32,7 @@ MinuteClockSource.prototype.start = function(forwardTo) {
   return this;
 };
 
-MinuteClockSource.prototype.tick = function() {
+MinuteClock.prototype.tick = function() {
   this.onchange();
   // For the first tick we must set timeout for it.
   this._tickId = window.setTimeout(() => {
@@ -40,7 +40,7 @@ MinuteClockSource.prototype.tick = function() {
   }, this.calcLeftMilliseconds());
 };
 
-MinuteClockSource.prototype.stop = function() {
+MinuteClock.prototype.stop = function() {
   this._forwardTo = null;
   if (this._tickId) {
     window.clearTimeout(this._tickId);
@@ -53,13 +53,13 @@ MinuteClockSource.prototype.stop = function() {
  * When the time is up, fire an event by generator.
  * So that the onchange method would forward it to the target.
  */
-MinuteClockSource.prototype.onchange = function() {
+MinuteClock.prototype.onchange = function() {
   if (this._forwardTo) {
-    this._forwardTo(new SourceEvent(this.configs.type));
+    this._forwardTo(new EventDatum(this.configs.type));
   }
 };
 
-MinuteClockSource.prototype.calcLeftMilliseconds = function() {
+MinuteClock.prototype.calcLeftMilliseconds = function() {
   var seconds = (new Date()).getSeconds();
   // If it's at the second 0th of the minute, immediate start to tick.
   var leftMilliseconds = (60 - seconds) * 1000;

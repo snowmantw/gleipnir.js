@@ -1,6 +1,6 @@
 'use strict';
 
-import { Logger as StateLogger } from 'src/logger/state.js';
+import { State as StateLogger } from 'src/logger/state.js';
 
 /**
  * Component provides:
@@ -29,7 +29,7 @@ import { Logger as StateLogger } from 'src/logger/state.js';
  * These behaviors should be encapsulated inside the 'view', and be
  * handled at the underlying level.
  */
-export function BasicComponent(view) {
+export function Basic(view) {
   this._subcomponents = null;
   this._activeState = null;
   // Concrete components should extend these to let States access them.
@@ -59,7 +59,7 @@ export function BasicComponent(view) {
 /**
  * State' phase is the component's phase.
  */
-BasicComponent.prototype.phase =
+Basic.prototype.phase =
 function() {
   return this._activeState.phase();
 };
@@ -76,7 +76,7 @@ function() {
  * so the user must detect if the return thing is a valid process
  * could be chained, or pre-check it with the property.
  */
-BasicComponent.prototype.transferTo = function(clazz, reason = {}) {
+Basic.prototype.transferTo = function(clazz, reason = {}) {
   var nextState = new clazz(this);
   var currentState = this._activeState;
   this._activeState = nextState;
@@ -97,7 +97,7 @@ BasicComponent.prototype.transferTo = function(clazz, reason = {}) {
  * implement the setup function, which would return the state after
  * receive the component instance.
  */
-BasicComponent.prototype.start = function(resources) {
+Basic.prototype.start = function(resources) {
   this.logger.start(this.configs.logger);
   if (resources) {
     for (var key in this.resources) {
@@ -113,22 +113,22 @@ BasicComponent.prototype.start = function(resources) {
   return this._activeState.start();
 };
 
-BasicComponent.prototype.stop = function() {
+Basic.prototype.stop = function() {
   return this._activeState.stop()
     .next(this.waitComponents.bind(this, 'stop'));
 };
 
-BasicComponent.prototype.destroy = function() {
+Basic.prototype.destroy = function() {
   return this._activeState.destroy()
     .next(this.waitComponents.bind(this, 'destroy'))
     .next(() => { this.logger.stop(); });  // Logger need add phase support.
 };
 
-BasicComponent.prototype.live = function() {
+Basic.prototype.live = function() {
   return this._activeState.until('stop');
 };
 
-BasicComponent.prototype.exist = function() {
+Basic.prototype.exist = function() {
   return this._activeState.until('destroy');
 };
 
@@ -152,7 +152,7 @@ BasicComponent.prototype.exist = function() {
  * or access them individually via the component instance set at the
  * setup stage.
  */
-BasicComponent.prototype.waitComponents = function(method, args) {
+Basic.prototype.waitComponents = function(method, args) {
   if (!this._subcomponents) {
     return Promise.resolve();
   }
@@ -186,7 +186,7 @@ BasicComponent.prototype.waitComponents = function(method, args) {
  * UI view, some targeting 'canvas' could be more tricky, like FileObject,
  * Blob, sound system, etc.
  */
-BasicComponent.prototype.render = function(props, target) {
+Basic.prototype.render = function(props, target) {
   return this.view.render(props, target);
 };
 
